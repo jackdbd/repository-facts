@@ -1,4 +1,4 @@
-{;;  :deps {local/deps {:local/root "."}}
+{:deps {local/deps {:local/root "."}}
 
  :min-bb-version "1.3.0"
 
@@ -10,12 +10,6 @@
   :init (do
           (def foo "bar")
           (def bar "baz"))
-
-  print-foo {:task (shell "echo" foo)}
-
-  squint:compile
-  {:doc "Compile .cljs/.cljc files"
-   :task (shell "npx squint compile")}
 
   cp
   {:doc "Prints the classpath"

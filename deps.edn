@@ -1,0 +1,10 @@
+{:aliases
+ {:dev
+  {:extra-deps {djblue/portal {:mvn/version "0.57.3"}}
+   :extra-paths ["dev"]}}
+
+ :deps
+ {;;   org.clojure/clojure {:mvn/version "1.12.0"}
+  }
+
+ :paths ["src"]}

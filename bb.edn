@@ -8,9 +8,17 @@
  {:requires ([tasks])
 
   :init (do
-          (def foo "bar")
-          (def bar "baz"))
+          (def notes-ref (System/getenv "GIT_NOTES_REF"))
+          (def default-notes-ref "/refs/notes/commits"))
 
   cp
   {:doc "Prints the classpath"
-   :task (tasks/print-classpath)}}}
+   :task (tasks/print-classpath)}
+
+  notes:list
+  {:doc "List notes in GIT_NOTES_REF"
+   :task (tasks/list-notes {:notes-ref notes-ref})}
+
+  notes:seed
+  {:doc "Seed notes in GIT_NOTES_REF"
+   :task (tasks/seed-notes {:notes-ref notes-ref})}}}

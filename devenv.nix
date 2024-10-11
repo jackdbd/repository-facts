@@ -11,7 +11,8 @@
   env = {
     # GIT_NOTES_NAMESPACE = "foo"; # custom namespace for git notes
     # GIT_NOTES_REF = "refs/notes/commits"; # default
-    GIT_NOTES_REF = "refs/notes/foo"; # custom namespace for git notes
+    # GIT_NOTES_REF = "refs/notes/foo"; # custom namespace for git notes
+    GIT_NOTES_REF = "refs/notes/bar"; # custom namespace for git notes
     GREET = "devenv";
   };
 

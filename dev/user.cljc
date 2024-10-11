@@ -2,11 +2,11 @@
   "Tools for interactive development with the REPL.
    This file should not be included in a production build of the application."
   (:require
-   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
    [default]
-   [dev-util :refer [seed-notes branch-commits first-commit]]
+   [dev-util :refer [seed-notes! branch-commits first-commit tap-note>]]
    [notes]
-   [util :refer [head]]))
+   [git :refer [head]]))
 
 #?(:bb (do
          (require '[babashka.deps :as deps])
@@ -23,47 +23,16 @@
           (require '[portal.api :as p])
           (require '[sc.api])))
 
-(s/fdef ranged-rand
-  :args (s/and (s/cat :start int? :end int?)
-               #(< (:start %) (:end %)))
-  :ret int?
-  :fn (s/and #(>= (:ret %) (-> % :args :start))
-             #(< (:ret %) (-> % :args :end))))
-
-(defn ranged-rand
-  "Returns random int in range start <= rand < end"
-  [start end]
-  (+ start (long
-            (sc.api/spy
-             (rand (- end start))))))
-
-(defn plus-two-times-three-minus-1
-  [n]
-  (- (* 3
-        (+ 2 n))
-     1))
-
-(comment
-  (plus-two-times-three-minus-1 3))
-
 #_{:clj-kondo/ignore [:invalid-arity]} ;; for notes/list (I guess because of (:refer-clojure :exclude [list]))
 (comment
   #?(:bb "Babashka" :clj "Clojure" :cljs "ClojureScript" :default "Something else")
-  #?(:bb nil :clj (st/instrument))
-  (ranged-rand 11 10)
-  #?(:bb nil :clj (st/unstrument))
-  (ranged-rand 11 10)
+  (st/instrument)
+  (st/unstrument)
 
-  (s/def ::distance (s/cat :amount (s/and number? pos?)
-                           :unit #{:meters :miles}))
+  (head)
 
-  (s/conform ::distance [3 :meters])
-  (s/explain ::distance [3 :meters])
-  (s/conform ::distance [3 :steps])
-  (s/explain-data ::distance [3 :steps])
-
-  (def spy-id 2)
-  #?(:bb nil :clj (sc.api/ep-info spy-id))
+  (def spy-id 1)
+  (sc.api/ep-info spy-id)
 
   ;; Option 1: launch Portal as standalone PWA
   (def portal (p/open {:window-title "Portal UI"}))
@@ -75,28 +44,46 @@
   (tap> {:foo "bar"})
   (p/clear)
 
-  #?(:bb nil :clj (tap> (sc.api/ep-info spy-id)))
+  (tap> (sc.api/ep-info spy-id))
 
   (def notes-ref "refs/notes/foo")
-
   (branch-commits)
-  (seed-notes {:notes-ref notes-ref})
+  (seed-notes! {:notes-ref notes-ref})
 
   (notes/list {:notes-ref notes-ref})
+  (tap> (notes/list {:notes-ref notes-ref}))
   (notes/list {:notes-ref default/notes-ref})
   (notes/list {:notes-ref "refs/notes/bar"})
 
   ;; HEAD is the default object to show notes for
   (notes/show {:notes-ref notes-ref})
-  (notes/show {:notes-ref notes-ref :ref (head)})
+  (notes/show {:notes-ref notes-ref :object (head)})
+  (tap> (notes/show {:notes-ref notes-ref :object (head)}))
 
   ;; removing and re-adding a note to the same commit
-  (notes/show {:notes-ref notes-ref :ref (first-commit)})
-  (notes/remove! {:notes-ref notes-ref :ref (first-commit)})
-  (notes/show {:notes-ref notes-ref :ref (first-commit)})
-  (notes/add! {:notes-ref notes-ref :ref (first-commit)
-               :message "Note about first commit re-added"})
-  (notes/show {:notes-ref notes-ref :ref (first-commit)})
+  (notes/show {:notes-ref notes-ref :object (first-commit)})
+  (notes/remove! {:notes-ref notes-ref :object (first-commit)})
+  (notes/show {:notes-ref notes-ref :object (first-commit)})
+  (notes/add! {:notes-ref notes-ref :object (first-commit)
+               :force? true :message "Note about first commit re-added"})
+  (notes/append! {:notes-ref notes-ref :object (first-commit)
+                  :message "Trailing spaces will be stripped       " :stripspace? true})
+  (notes/append! {:notes-ref notes-ref :object (first-commit)
+                  :message "Trailing spaces will NOT be stripped       "})
+  (notes/show {:notes-ref notes-ref :object (first-commit)})
+  (tap> (notes/show {:notes-ref notes-ref :object (first-commit)}))
+  (tap-note> {:notes-ref notes-ref :object (first-commit)})
+
+  (def md (str/join "\n" ["# Hello"
+                          "\n"
+                          "This is a **markdown** note."
+                          "\n"
+                          "```"
+                          "const x = 123"
+                          "```"]))
+  (notes/add! {:notes-ref notes-ref :object (first-commit)
+               :force? true :message md})
+  (tap-note> {:notes-ref notes-ref :object (first-commit)})
 
   (tap> (with-meta
           [:portal.viewer/html "<div><p>Hello <strong>world</strong></p></div>"]

@@ -2,7 +2,8 @@
 .calva/
 
 # Static analyzer and linter for Clojure code
-.clj-kondo/
+.clj-kondo/*
+!.clj-kondo/config.edn
 
 # Clojure classpath cache
 .cpcache/

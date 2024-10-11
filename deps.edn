@@ -3,10 +3,12 @@
   {:extra-deps {babashka/process {:mvn/version "0.5.22"}
                 cheshire/cheshire {:mvn/version "5.13.0"}
                 com.taoensso/timbre {:mvn/version "6.6.0-RC1"}
-                djblue/portal {:mvn/version "0.57.3"}}
+                djblue/portal {:mvn/version "0.57.3"}
+                orchestra/orchestra {:mvn/version "2021.01.01-1"}
+                org.clojure/clojure {:mvn/version "1.12.0"}
+                vvvvalvalval/scope-capture {:mvn/version "0.3.3"}}
    :extra-paths ["dev"]}}
 
- :deps
- {org.clojure/clojure {:mvn/version "1.12.0"}}
+ :deps {}
 
  :paths ["src"]}

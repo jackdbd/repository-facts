@@ -1,7 +1,9 @@
 (ns dev-util
   (:require
+   [babashka.process :refer [shell]]
    [cheshire.core :as json]
    [clojure.core :refer [format]]
+   [clojure.string :as str]
    [notes]
    [taoensso.timbre :refer [info]])
   (:import
@@ -13,10 +15,19 @@
 (defn yyyy-mm-dd []
   (str (LocalDate/now)))
 
-(def first-commit "607b7134d11ac1d0f9f8dc1080f7c2757a086cf4")
-(def second-commit "e95918f917535a8606d9b741e7e5a46d65c35e84")
-(def third-commit "7ad0019adb97e393d0ed4be621100d0b118dd71a")
-(def commits [first-commit second-commit third-commit])
+(defn branch-commits
+  "Retrieve a list of commits from the current branch."
+  []
+  (-> (shell {:out :string} "git rev-list HEAD")
+      :out
+      str/trim-newline
+      str/split-lines))
+
+(defn first-commit [] (last (branch-commits)))
+(defn second-commit [] (nth (reverse (branch-commits)) 1))
+(defn third-commit [] (nth (reverse (branch-commits)) 2))
+(defn most-recent-commit [] (first (branch-commits)))
+(defn commits [] [(first-commit) (second-commit) (third-commit) (most-recent-commit)])
 
 (def note-as-map {:first_run_at (yyyy-mm-dd)
                   :last_run_at (yyyy-mm-dd)
@@ -30,16 +41,16 @@
 
 (defn seed-notes [{:keys [notes-ref]}]
   (info "seed notes in GIT_NOTES_REF" notes-ref)
-  (notes/remove! {:notes-ref notes-ref :ref first-commit :ignore-missing? true})
-  (notes/remove! {:notes-ref notes-ref :ref second-commit :ignore-missing? true})
-  (notes/remove! {:notes-ref notes-ref :ref third-commit :ignore-missing? true})
+  (let [xs (commits)]
+    (doseq [i (range (count xs))]
+      (let [commit (nth xs i)]
+        (info (format "remove! note to commit %s (index %s)" commit i))
+        (notes/remove! {:notes-ref notes-ref :ref commit :ignore-missing? true})
 
-  (doseq [i (range (count commits))]
-    (let [commit (nth commits i)]
-      (info (format "add! note to commit %s (index %s)" commit i))
-      (notes/add! {:notes-ref notes-ref
-                   :ref commit
-                   :message (format "Note about commit index %s" i)}))))
+        (info (format "add! note to commit %s (index %s)" commit i))
+        (notes/add! {:notes-ref notes-ref
+                     :ref commit
+                     :message (format "Note about commit index %s" i)})))))
 
 (comment
   (json/parse-string note-as-string true))

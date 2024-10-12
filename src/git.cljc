@@ -27,8 +27,13 @@
       (str/trim out)
       nil)))
 
-(comment
-  (s/valid? ::object (head)))
+(defn branch-commits
+  "Retrieve a list of commits from the current branch."
+  []
+  (-> (shell {:out :string} "git rev-list HEAD")
+      :out
+      str/trim-newline
+      str/split-lines))
 
 (def notes-ref-regex #"^refs/notes/\w+$")
 
@@ -38,5 +43,6 @@
 (s/def ::notes-ref notes-ref?)
 
 (comment
+  (s/valid? ::object (head))
   (s/valid? ::notes-ref "refs/notes/commits")
   (s/valid? ::notes-ref "refs/notes/foo"))

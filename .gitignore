@@ -14,6 +14,9 @@
 # nREPL port
 .nrepl-port
 
+resources/fakes/*
+!resources/fakes/README.md
+
 # Compilation artifacts (e.g. jars, uberjars, binaries, images)
 target/
 

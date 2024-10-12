@@ -5,20 +5,59 @@
  :paths ["bb" "dev" "src"]
 
  :tasks
- {:requires ([tasks])
+ {:requires ([fakes :refer [fake-local-fact]]
+             [tasks])
 
   :init (do
           (def notes-ref (System/getenv "GIT_NOTES_REF"))
-          (def default-notes-ref "/refs/notes/commits"))
+          (def default-notes-ref "refs/notes/commits")
+          (def first-commit "607b7134d11ac1d0f9f8dc1080f7c2757a086cf4"))
 
   cp
-  {:doc "Prints the classpath"
+  {:doc "Print classpath"
    :task (tasks/print-classpath)}
+
+  facts:list
+  {:doc "List facts across all notes of namespace GIT_NOTES_REF"
+  ;; :depends [notes:seed]
+   :task (tasks/list-facts {:notes-ref notes-ref})}
+
+  facts:commit:append
+  {:doc "Add a fact to all facts of a single commit"
+   :task (tasks/append-fact  {:notes-ref notes-ref
+                              :object first-commit
+                              :fact (fake-local-fact)})}
+
+  facts:commit:list
+  {:doc "List facts of a single commit"
+    ;; :depends [notes:seed]
+   :task (tasks/list-facts {:notes-ref notes-ref :object first-commit})}
+
+  fake:note
+  {:doc "Generate a fake note and store it on the filesystem, so to have an idea of its size"
+   :task (tasks/spit-fake-note {:n-facts 10})}
+
+  -graph:gen
+  {:task (clojure "-X:hiera" :layout :vertical)}
+
+  -graph:copy
+  {:task (shell "cp target/hiera/namespaces.png resources/img")}
+
+  graph
+  {:depends [-graph:gen -graph:copy]
+   :doc "Generate a graph of dependencies between namespaces and copy the image to resources/img"
+   :task (shell "feh resources/img/namespaces.png")}
 
   notes:list
   {:doc "List notes in GIT_NOTES_REF"
+   ;; :depends [notes:seed]
    :task (tasks/list-notes {:notes-ref notes-ref})}
+
+  notes:remove
+  {:doc "Remove all notes in GIT_NOTES_REF"
+   :task (tasks/remove-notes {:notes-ref notes-ref})}
 
   notes:seed
   {:doc "Seed notes in GIT_NOTES_REF"
+  ;; :depends [notes:remove]
    :task (tasks/seed-notes {:notes-ref notes-ref})}}}
